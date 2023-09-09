@@ -1,10 +1,2 @@
 *.vscode
 /old
-old/exel_get_cell.py
-old/exel_get_cell_v2.py
-old/gen.py
-old/gen_gre_cfg.py
-old/gen_gre_cfg_cus.py
-old/gen_gre_cfg_v2.py
-old/gen_gre_cfg_v3.py
-old/gen_gre_cfg_v4.py
