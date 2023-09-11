@@ -1,2 +1,3 @@
-В репозитории находятся первые попытки программировать на Python.
-3.09.23
+# First step
+The repository contains the first attempts to program in Python. 
+The beginning of immersion in the programming language 03.09.23
