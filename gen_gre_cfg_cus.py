@@ -19,6 +19,7 @@ sheet = workbook.active
 # Определяем шаблон конфигурации GRE туннеля для Cisco ASR1002
 gre_template = """
 interface Tunnel{tunnel_number}
+ no shutdown
  description {description}
  bandwidth 10000
  ip vrf forwarding VPN
@@ -59,8 +60,8 @@ def generate_gre_config(router):
         subnet_mask = row[12 if router == "r1" else 20]  # Маска подсети для r1 или r2
         tun_destination = row[6 if router == "r1" else 15]  # IP адрес назначения для r1 или r2
         if router == "r1":
-            description = f"-> RT01-{modified_remote_site_translit}-BRD via ТТК"
-            tunnel_vrf = 'VPN'
+            description = f"-> RT01-{modified_remote_site_translit}-BRD via TTK"
+            tunnel_vrf = 'VOK'
         else:
             description = f"-> RT01-{modified_remote_site_translit}-BRD via MEGATON"
             tunnel_vrf = 'EXT'
