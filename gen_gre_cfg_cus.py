@@ -10,7 +10,7 @@ parser.add_argument("-r2", action="store_true", help="Generate configuration for
 args = parser.parse_args()
 
 # Путь к файлу Excel с данными
-excel_file_path = '/mnt/c/Users/SBakhvalov/Documents/_dev/wsl_dir/pyProc_IP_plan_SB.xlsx'
+excel_file_path = '/mnt/c/Users/SBakhvalov/Documents/_dev/wsl_dir/cppk/pyProc_IP_plan_SB.xlsx'
 
 # Открываем файл Excel с аргументом data_only=True
 workbook = load_workbook(excel_file_path, data_only=True)
@@ -34,7 +34,7 @@ interface Tunnel{tunnel_number}
 # Функция для генерации конфигурации GRE туннелей
 def generate_gre_config(router):
     # Проходимся по строкам файла Excel, начиная с второй строки (первая строка - заголовки)
-    for row in sheet.iter_rows(min_row=3, values_only=True):
+    for row in sheet.iter_rows(min_row=3, max_row=50, values_only=True):
         remote_site = row[0]  # Название удаленной площадки на русском
         remote_site_translit = translit(remote_site, 'ru', reversed=True).upper()  # Транслитерация на английский
         split_site_translit = remote_site_translit.split()
