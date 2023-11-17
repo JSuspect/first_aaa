@@ -2,22 +2,13 @@ import os
 import re
 from openpyxl import load_workbook
 
+
 # Путь к файлам конфигурации
-config_path = '/mnt/c/Users/SBakhvalov/Documents/_wsl_dir/rusatom/config'
+config_path = '/mnt/c/Users/SBakhvalov/Documents/_wsl_dir/rusatom/config/source_cfg'
 # Путь к Excel файлу
 excel_path = '/mnt/c/Users/SBakhvalov/Documents/_wsl_dir/rusatom/table.xlsx'
 
-regex = re.compile(
-    r'interface (FastEthernet|GigabitEthernet)\S+.*?'  # Начало блока интерфейса
-    r'(?:switchport mode (access|trunk).*?)?'  # Необязательная строка switchport mode
-    r'(?:switchport access vlan (\d+)|switchport trunk allowed vlan (\d+)).*?'  # VLAN настройки
-    r'!',  # Конец блока интерфейса
-    re.DOTALL | re.IGNORECASE
-)
-
-
-
-
+regex_interfsces_cfg = re.compile(r'interface\sFastEthernet[^!]*?!|interface\sGigabitEthernet[^!]*?!')
 
 # Функция для извлечения данных из конфигурационного файла
 def parse_config(config_file):
@@ -46,27 +37,45 @@ def parse_config(config_file):
     management_ip = management_ip_match.group(1) if management_ip_match else None
     
     ports_data = []
-    
-    matches = regex.finditer(config)
+    matches = regex_interfsces_cfg.finditer(config)
 
     for match in matches:
-        interface = match.group(1) + str(match.group(2))  # Concatenate interface type with port number
-        mode = match.group(4)
-        vlan = 'unknown'  # Default value if VLAN is not found
+        vlan = None
+        interface = None
+        interface_type = None
+        shutdown = None
+        description = None
 
-        # Access VLAN
-        if mode == 'access' and match.group(5):
-            vlan = match.group(5)
-        # Trunk VLAN
-        elif mode == 'trunk' and match.group(6):
-            vlan = match.group(6)
-        ports_data.append((hostname, management_ip, interface, mode, vlan))
+        int_config = match.group()
 
-    # Извлекаем информацию о портах
-#    ports_data = []
-#    for port_match in re.finditer(r'interface (\S+)\s+(?:.*\n)+?switchport (?:mode (\S+)).+?vlan (\d+)', config):
-#        port, mode, vlan = port_match.groups()
-#        ports_data.append((hostname, management_ip, interface, mode, vlan))
+        interface_match = re.search(r'interface\s(FastEthernet\S+|GigabitEthernet\S+)', int_config)
+        interface = interface_match.group(1)
+
+        description_match = re.search(r'description (.*)', int_config)
+        description = description_match.group(1) if description_match else None
+
+        type_match = re.search(r'(?:switchport mode (access|trunk))', int_config)
+        interface_type = type_match.group(1) if type_match else None
+
+        shutdown_match = re.search(r'shutdown', int_config)
+        shutdown = shutdown_match.group() if shutdown_match else None
+        
+        vlan_access_match = re.search(r'(?:switchport (access vlan) (\d+))', int_config)
+        vlan_trunk_match = re.search(r'(?:switchport (trunk allowed vlan) (\S+))', int_config)
+        
+        if ((interface_type == 'access') or interface_type == None) and (vlan_access_match is not None):
+            vlan = vlan_access_match.group(2)
+            interface_type = 'access'
+        elif (interface_type == 'access') and (vlan_access_match is None):
+            vlan = '1'
+        elif (interface_type == 'trunk') and (vlan_trunk_match is not None):
+            vlan =  vlan_trunk_match.group(2)
+        elif (interface_type == 'trunk') and (vlan_trunk_match is None):
+            vlan = 'ALL'
+        elif (interface_type is None) and (vlan_access_match is None) and (vlan_trunk_match is None) and (description is None):
+            interface_type = 'NOTCONFIG'
+
+        ports_data.append((hostname, description, management_ip, interface, interface_type, vlan, shutdown))
 
     return ports_data
 
